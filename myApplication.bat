@@ -1,1 +1,0 @@
-start java -jar target/myApplication-1.0.jar
