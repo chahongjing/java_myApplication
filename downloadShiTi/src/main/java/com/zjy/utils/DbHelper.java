@@ -1,4 +1,4 @@
-package com.iflytek.itembank.utils;
+package com.zjy.utils;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;

@@ -1,4 +1,4 @@
-package com.iflytek.itembank.dto;
+package com.zjy.dto;
 
 public class SimpleChoice {
     private String Identifier;

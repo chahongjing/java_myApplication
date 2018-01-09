@@ -1,7 +1,7 @@
-package com.iflytek.itembank;
+package com.zjy;
 
-import com.iflytek.itembank.service.Ibm_PaperQuestionService;
-import com.iflytek.itembank.utils.LogHelper;
+import com.zjy.service.Ibm_PaperQuestionService;
+import com.zjy.utils.LogHelper;
 import org.slf4j.Logger;
 
 /**

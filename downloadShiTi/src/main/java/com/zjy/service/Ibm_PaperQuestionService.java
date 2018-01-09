@@ -1,13 +1,13 @@
-package com.iflytek.itembank.service;
+package com.zjy.service;
 
 import com.alibaba.fastjson.JSON;
-import com.iflytek.itembank.dto.*;
-import com.iflytek.itembank.entity.Ibm_Major;
-import com.iflytek.itembank.entity.Ibm_PaperQuestion;
-import com.iflytek.itembank.utils.DbHelper;
-import com.iflytek.itembank.utils.ExcelHelper;
-import com.iflytek.itembank.utils.LogHelper;
-import com.iflytek.itembank.utils.PropertiesHelper;
+import com.zjy.dto.*;
+import com.zjy.entity.Ibm_Major;
+import com.zjy.entity.Ibm_PaperQuestion;
+import com.zjy.utils.DbHelper;
+import com.zjy.utils.ExcelHelper;
+import com.zjy.utils.LogHelper;
+import com.zjy.utils.PropertiesHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;

@@ -1,4 +1,4 @@
-package com.iflytek.itembank.entity;
+package com.zjy.entity;
 
 public class Ibm_Major {
     private Integer utid;

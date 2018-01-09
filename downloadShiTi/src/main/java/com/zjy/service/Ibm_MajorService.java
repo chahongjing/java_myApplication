@@ -1,7 +1,7 @@
-package com.iflytek.itembank.service;
+package com.zjy.service;
 
-import com.iflytek.itembank.entity.Ibm_Major;
-import com.iflytek.itembank.utils.DbHelper;
+import com.zjy.entity.Ibm_Major;
+import com.zjy.utils.DbHelper;
 
 import java.util.List;
 
