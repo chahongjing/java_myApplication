@@ -2,6 +2,7 @@ package com.zjy.entity;
 
 public class Ibm_PaperQuestion {
     private Integer utid;
+    private String paperQuestionId;
     private String paperId;
     private String zhuanYeBianMa;
     private String xueKeBianMa;
@@ -19,6 +20,7 @@ public class Ibm_PaperQuestion {
     private String tiXingMingCheng;
     private String tiXingBianMa;
     private String qtiXmlModel;
+    private String paperContent;
     private String tiGan;
     private String xuanXiang;
     private String daAn;
@@ -198,5 +200,21 @@ public class Ibm_PaperQuestion {
 
     public void setIsPublic(String isPublic) {
         this.isPublic = isPublic;
+    }
+
+    public String getPaperContent() {
+        return paperContent;
+    }
+
+    public void setPaperContent(String paperContent) {
+        this.paperContent = paperContent;
+    }
+
+    public String getPaperQuestionId() {
+        return paperQuestionId;
+    }
+
+    public void setPaperQuestionId(String paperQuestionId) {
+        this.paperQuestionId = paperQuestionId;
     }
 }

@@ -3,12 +3,15 @@ package com.zjy.service;
 import com.alibaba.fastjson.JSON;
 import com.zjy.dto.*;
 import com.zjy.entity.Ibm_Major;
+import com.zjy.entity.Ibm_Paper;
 import com.zjy.entity.Ibm_PaperQuestion;
+import com.zjy.enums.PaperType;
 import com.zjy.utils.DbHelper;
 import com.zjy.utils.ExcelHelper;
 import com.zjy.utils.LogHelper;
 import com.zjy.utils.PropertiesHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.jsoup.Jsoup;
@@ -20,8 +23,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Ibm_PaperQuestionService {
@@ -54,6 +57,7 @@ public class Ibm_PaperQuestionService {
      * 构造器
      */
     public Ibm_PaperQuestionService() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         majorSrv = new Ibm_MajorService();
         // excel存放路径
         excelPath = PropertiesHelper.getInstance().getProperties("rootpath");
@@ -62,7 +66,7 @@ public class Ibm_PaperQuestionService {
             excelPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
             excelPath = new File(excelPath).getParentFile().getAbsolutePath();
         }
-        File path = Paths.get(excelPath, "excelFiles").toFile();
+        File path = Paths.get(excelPath, "excelFiles" + sdf.format(new Date())).toFile();
         excelPath = path.getAbsolutePath();
         if (!path.exists()) {
             path.mkdirs();
@@ -101,7 +105,7 @@ public class Ibm_PaperQuestionService {
     /**
      * 所有学科参与过组卷的都导出excel
      */
-    public void exportAllXueKePaperQuestionExcel() {
+    public void exportAllXueKePaperQuestionExcel(List<Pair<Date, Date>> paperDateList, PaperType paperType) {
         List<Ibm_Major> majorList = majorSrv.getAllPaperMajor();
         if (majorList == null || majorList.isEmpty()) {
             logger.info("没有参与组卷的学科！");
@@ -117,7 +121,8 @@ public class Ibm_PaperQuestionService {
 
             String majorInfo = (major.getMajorName() + "(" + major.getMajorCode() + ")").replace(".", "_");
             logger.info("开始处理第" + i + "个学科【" + majorInfo + "】。");
-            List<Ibm_PaperQuestion> paperQuestionList = getPaperQuestionBySubject(major.getMajorCode());
+            // List<Ibm_PaperQuestion> paperQuestionList = getPaperQuestionBySubject(major.getMajorCode());
+            List<Ibm_PaperQuestion> paperQuestionList = getPaperQuestionBySubjectNew(major.getMajorCode(), paperDateList, paperType);
             if (paperQuestionList == null || paperQuestionList.isEmpty()) {
                 logger.info("第" + i + "个学科【" + majorInfo + "】下没有参与组卷的试题！。\n");
                 continue;
@@ -210,25 +215,140 @@ public class Ibm_PaperQuestionService {
         return DbHelper.getList(sql, Ibm_PaperQuestion.class);
     }
 
+    public List<Ibm_PaperQuestion> getPaperQuestionBySubjectNew(String subjectCode, List<Pair<Date, Date>> paperDateList, PaperType paperType) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String sql = "select utid, paperId, paperCode, parentCode, name, subjectCode, subjectName, paperContent from ibm_paper p " +
+                "   where p.subjectcode = '" + subjectCode.replace("'", "") + "' ";
+        if(paperDateList != null && !paperDateList.isEmpty()) {
+            for (Pair<Date, Date> stringDatePair : paperDateList) {
+                sql += " and (p.createon >= to_date('" + sdf.format(stringDatePair.getKey()) + "', 'yyyy-MM-dd hh24:mi:ss') and p.createon < to_date('" + sdf.format(stringDatePair.getValue()) + "', 'yyyy-MM-dd hh24:mi:ss'))";
+            }
+        }
+        if(paperType != null) {
+            if(paperType == PaperType.Formal) {
+                sql += " and p.name not like '%模拟%' ";
+            } else if(paperType == PaperType.Simulation) {
+                sql += " and p.name like '%模拟%' ";
+            }
+        }
+
+        sql +=  "    order by p.utid";
+        List<Ibm_Paper> papers = DbHelper.getList(sql, Ibm_Paper.class);
+        List<Ibm_PaperQuestion> pqs = new ArrayList<>();
+        PaperTemplateConfigDTO paperModel = null;
+        PaperSectionConfig psc = null;
+        PaperItemConfig pic = null;
+        for (Ibm_Paper paper : papers) {
+            List<String> questionIds = new ArrayList<>();
+            if (!StringUtils.isBlank(paper.getPaperContent())) {
+                paper.setPaperContent(paper.getPaperContent().trim());
+                try {
+                    paperModel = JSON.parseObject(paper.getPaperContent(), PaperTemplateConfigDTO.class);
+                } catch (Exception ex) {
+                    logger.error("序列化错误,papercontent！" + paper.getPaperContent(), ex);
+                }
+                if (paperModel != null) {
+                    boolean flag = false;
+                    if (!paperModel.getTestParts().isEmpty() && !paperModel.getTestParts().get(0).getAssessmentSections().isEmpty()) {
+                        for (int i = 0; i < paperModel.getTestParts().get(0).getAssessmentSections().size(); i++) {
+                            if (flag) break;
+                            psc = paperModel.getTestParts().get(0).getAssessmentSections().get(i);
+                            if (!psc.getAssessmentItems().isEmpty()) {
+                                for (int j = 0; j < psc.getAssessmentItems().size(); j++) {
+                                    if (flag) break;
+                                    pic = psc.getAssessmentItems().get(j);
+                                    if(!StringUtils.isBlank(pic.getQuestionId())) {
+                                        questionIds.add(pic.getQuestionId());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(!questionIds.isEmpty()) {
+                // 通过id获取试题
+                pqs.addAll(getPaperQuestionByQuestionIds(paper, questionIds));
+            }
+        }
+        return pqs;
+    }
+
+    private List<Ibm_PaperQuestion> getPaperQuestionByQuestionIds(Ibm_Paper paper, List<String> questionIds) {
+        List<Ibm_PaperQuestion> pqs = new ArrayList<>();
+        if(questionIds == null || questionIds.isEmpty()) return pqs;
+        String ids = "'" + String.join("','", questionIds) + "'";
+        if(!StringUtils.isBlank(ids)) ids = "," + ids;
+        String sql = "select pq.paperQuestionId,  q.questioncode as ShiTiBianMa," +
+                "           q.Difficultycode as NanDuBianMa, Q.Difficultyname as NanDuMingCheng, q.knowledgecode as ZhiShiDianBianMa, q.knowledgecontent as ZhiShiDianMingCheng, q.abilitycode as KaoShiYaoQiuBianMa," +
+                "          q.abilityname as KaoShiYaoQiuMingCheng, q.sectioncode as TiXingBianMa, q.sectionname as TiXingMingCheng, pq.sectioncode, pq.createtime, " +
+                "           nvl2(pq.qtixmlmodel, pq.qtixmlmodel, q.qtixmlmodel) as qtixmlmodel,case when q.ispublic = 1 then '是' else '否' end as ispublic " +
+                "      from ibm_paperquestion pq " +
+                "     inner join ibm_formalquestion q on pq.formalquestionid = q.formalquestionid " +
+                "   where pq.paperquestionid in ('-1'" + ids + ")";
+        pqs = DbHelper.getList(sql, Ibm_PaperQuestion.class);
+        for (Ibm_PaperQuestion pq : pqs) {
+            pq.setPaperContent(paper.getPaperContent());
+            pq.setPaperId(paper.getPaperId());
+            pq.setUtid(paper.getUtid());
+            pq.setZhuanYeBianMa(paper.getParentCode());
+            pq.setXueKeBianMa(paper.getSubjectCode());
+            pq.setXueKeMingCheng(paper.getSubjectName());
+            pq.setShiJuanMingCheng(paper.getName());
+            pq.setShiJuanBianMa(paper.getPaperCode());
+        }
+        anasysContent(pqs);
+        pqs = pqs.stream().sorted(Comparator.comparing(Ibm_PaperQuestion::getShiJuanShiTiXuHao)).collect(Collectors.toList());
+        return pqs;
+    }
+
     private void anasysContent(List<Ibm_PaperQuestion> paperQuestionList) {
         if (paperQuestionList == null || paperQuestionList.isEmpty()) return;
         QtiXmlModel xmlModel = null;
+        PaperTemplateConfigDTO paperModel = null;
+        PaperSectionConfig psc = null;
+        PaperItemConfig pic = null;
         for (Ibm_PaperQuestion question : paperQuestionList) {
-            if (StringUtils.isBlank(question.getQtiXmlModel())) {
-                continue;
+            if (!StringUtils.isBlank(question.getQtiXmlModel())) {
+                question.setQtiXmlModel(question.getQtiXmlModel().trim());
+                try {
+                    xmlModel = JSON.parseObject(question.getQtiXmlModel(), QtiXmlModel.class);
+                } catch (Exception ex) {
+                    logger.error("序列化错误,qtixmlmodel！" + question.getQtiXmlModel(), ex);
+                }
+                if (xmlModel != null) {
+                    question.setTiGan(getTiGan(xmlModel));
+                    question.setXuanXiang(getXuanXiang(xmlModel));
+                    question.setDaAn(getDaAn(xmlModel));
+                }
             }
-            question.setQtiXmlModel(question.getQtiXmlModel().trim());
-            try {
-                xmlModel = JSON.parseObject(question.getQtiXmlModel(), QtiXmlModel.class);
-            } catch (Exception ex) {
-                logger.error("序列化错误！" + question.getQtiXmlModel(), ex);
+            if (!StringUtils.isBlank(question.getPaperContent())) {
+                question.setPaperContent(question.getPaperContent().trim());
+                try {
+                    paperModel = JSON.parseObject(question.getPaperContent(), PaperTemplateConfigDTO.class);
+                } catch (Exception ex) {
+                    logger.error("序列化错误,papercontent！" + question.getPaperContent(), ex);
+                }
+                if (paperModel != null) {
+                    boolean flag = false;
+                    if (!paperModel.getTestParts().isEmpty() && !paperModel.getTestParts().get(0).getAssessmentSections().isEmpty()) {
+                        for (int i = 0; i < paperModel.getTestParts().get(0).getAssessmentSections().size(); i++) {
+                            if (flag) break;
+                            psc = paperModel.getTestParts().get(0).getAssessmentSections().get(i);
+                            if (!psc.getAssessmentItems().isEmpty()) {
+                                for (int j = 0; j < psc.getAssessmentItems().size(); j++) {
+                                    if (flag) break;
+                                    pic = psc.getAssessmentItems().get(j);
+                                    if (question.getPaperQuestionId().equals(pic.getQuestionId())) {
+                                        flag = true;
+                                        question.setShiJuanShiTiXuHao(pic.getSequence());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            if (xmlModel == null) {
-                continue;
-            }
-            question.setTiGan(getTiGan(xmlModel));
-            question.setXuanXiang(getXuanXiang(xmlModel));
-            question.setDaAn(getDaAn(xmlModel));
         }
     }
 
