@@ -49,7 +49,6 @@ public class FastdfsClientService {
      * 上传文件
      *
      * @param file     文件对象
-     * @param fileName 文件名
      * @return
      */
     public static String uploadFile(File file) {
@@ -60,7 +59,6 @@ public class FastdfsClientService {
      * 上传文件
      *
      * @param file     文件对象
-     * @param fileName 文件名
      * @param metaList 文件元数据
      * @return
      */
