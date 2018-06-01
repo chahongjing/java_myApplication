@@ -19,7 +19,7 @@ import java.util.Objects;
  * Created by Administrator on 2018/6/1.
  */
 public class FastdfsClientService {
-    private static final String CONFIG_FILENAME = "fdfs_client.conf";
+    private static final String CONFIG_FILENAME = "/fdfs_client.conf";
 
     private static StorageClient1 storageClient1 = null;
 
@@ -52,8 +52,8 @@ public class FastdfsClientService {
      * @param fileName 文件名
      * @return
      */
-    public static String uploadFile(File file, String fileName) {
-        return uploadFile(file, fileName, null);
+    public static String uploadFile(File file) {
+        return uploadFile(file, null);
     }
 
     /**
@@ -64,7 +64,7 @@ public class FastdfsClientService {
      * @param metaList 文件元数据
      * @return
      */
-    public static String uploadFile(File file, String fileName, Map<String, String> metaList) {
+    public static String uploadFile(File file, Map<String, String> metaList) {
         try {
             byte[] buff = org.apache.commons.io.IOUtils.toByteArray(new FileInputStream(file));
             NameValuePair[] nameValuePairs = null;
@@ -78,7 +78,7 @@ public class FastdfsClientService {
                     nameValuePairs[index++] = new NameValuePair(name, value);
                 }
             }
-            String extension = FilenameUtils.getExtension(fileName);
+            String extension = FilenameUtils.getExtension(file.getName());
             return storageClient1.upload_file1(buff, extension, nameValuePairs);
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,7 +187,7 @@ public class FastdfsClientService {
         metaList.put("height", "768");
         metaList.put("author", "杨信");
         metaList.put("date", "20161018");
-        String fid = uploadFile(file, file.getName(), metaList);
+        String fid = uploadFile(file, metaList);
         System.out.println("upload local file " + file.getPath() + " ok, fileid=" + fid);
         //上传成功返回的文件ID： group1/M00/00/00/wKgAyVgFk9aAB8hwAA-8Q6_7tHw351.jpg
         return fid;
