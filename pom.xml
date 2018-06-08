@@ -7,7 +7,7 @@
     <groupId>com.zjy</groupId>
     <artifactId>myApplication</artifactId>
     <packaging>pom</packaging>
-    <version>${project.version}</version>
+    <version>1.0</version>
     <modules>
         <module>downloadQuestion</module>
     </modules>
@@ -16,7 +16,6 @@
     <url>http://maven.apache.org</url>
 
     <properties>
-        <project.version>1.0</project.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring.version>5.0.2.RELEASE</spring.version>
