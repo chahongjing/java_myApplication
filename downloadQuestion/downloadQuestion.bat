@@ -1,6 +1,6 @@
 @echo off
 title downloadQuestion
-@echo on
+echo.
+echo %cd%\   java -jar target/downloadQuestion.jar
 java -jar target/downloadQuestion.jar
-@echo off
 pause;
