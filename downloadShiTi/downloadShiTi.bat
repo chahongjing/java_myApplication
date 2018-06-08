@@ -1,1 +1,0 @@
-start java -jar target/downloadShiTi-1.0.jar
