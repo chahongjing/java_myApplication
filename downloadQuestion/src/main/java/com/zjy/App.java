@@ -26,32 +26,32 @@ public class App {
     private static List<Pair<Date, Date>> dateList;
 
     public static void main(String[] args) {
-//        Logger logger = LogHelper.getLogger(App.class);
-//        try {
-//            logger.info("开始导出数据！");
-//            Ibm_PaperQuestionService ibm_paperQuestionService = new Ibm_PaperQuestionService();
-//            init();
-//            ibm_paperQuestionService.exportAllXueKePaperQuestionExcel(dateList, paperType);
-//            //ibm_paperQuestionService.exportAllXueKePaperQuestionExcel();
-//            String message = "数据全部导出完成！！！请在“" + ibm_paperQuestionService.getExcelPath() + "”查看导出的内容！";
-//            logger.info(message);
-//            System.in.read();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            logger.error("生成excel异常！", e);
-//        }
-//
-//        TestBeanService beanService = new TestBeanService();
-//        beanService.getBeans();
-
-        System.out.println("Hello World!");
-        String fid = FastdfsClientService.testUpload();
+        Logger logger = LogHelper.getLogger(App.class);
         try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
+            logger.info("开始导出数据！");
+            Ibm_PaperQuestionService ibm_paperQuestionService = new Ibm_PaperQuestionService();
+            init();
+            ibm_paperQuestionService.exportAllXueKePaperQuestionExcel(dateList, paperType);
+            //ibm_paperQuestionService.exportAllXueKePaperQuestionExcel();
+            String message = "数据全部导出完成！！！请在“" + ibm_paperQuestionService.getExcelPath() + "”查看导出的内容！";
+            logger.info(message);
+            System.in.read();
+        } catch (Exception e) {
             e.printStackTrace();
+            logger.error("生成excel异常！", e);
         }
-        FastdfsClientService.testDownload(fid);
+
+        TestBeanService beanService = new TestBeanService();
+        beanService.getBeans();
+
+//        System.out.println("Hello World!");
+//        String fid = FastdfsClientService.testUpload();
+//        try {
+//            Thread.sleep(3000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        FastdfsClientService.testDownload(fid);
     }
 
     public static void init()  {
