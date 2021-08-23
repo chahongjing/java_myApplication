@@ -23,7 +23,7 @@
         <log4j.version>2.11.2</log4j.version>
         <slf4j.version>1.7.26</slf4j.version>
         <poi.version>3.9</poi.version>
-        <jsoup.version>1.11.2</jsoup.version>
+        <jsoup.version>1.14.2</jsoup.version>
         <dbutils.version>1.7</dbutils.version>
         <oracle.version>11.2.0.3.0</oracle.version>
         <junit.version>4.12</junit.version>
